@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frases y Autores</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        /* Estilos personalizados adicionales */
+        .modal-header {
+            background-color: #00aaff;
+            color: white;
+        }
+        .modal-footer {
+            border-top: 1px solid #dee2e6;
+        }
+        .modal-footer .btn {
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background-color: #00aaff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #007bbf;
+        }
+        .btn-danger {
+            background-color: #ff6f61;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #ff4b40;
+        }
+        .btn-secondary {
+            background-color: #333;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #1a1a1a;
+        }
+
+        /* Estilos de la tabla */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #00aaff;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #00aaff;
+            color: #fff;
+        }
+        td {
+            background-color: #f9f9f9;
+            font-size: 16px;
+        }
+        tr:nth-child(even) {
+            background-color: #e3f2fd;
+        }
+        tr:hover {
+            background-color: #b3e5fc;
+        }
+        td:first-child {
+            width: 55%; /* Ancho mayor para las frases */
+        }
+        td:nth-child(2) {
+            width: 25%; /* Ancho mayor para el autor */
+        }
+
+        /* Espaciado entre botones */
+        .btn-group .btn {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="container mt-5">
+        <h1 class="text-center mb-4">Frases y Autores</h1>
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modal" @click="openModal()">Agregar Nueva Frase</button>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Frase</th>
+                    <th>Autor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(frase, index) in frases" :key="index">
+                    <td>{{ frase.texto }}</td>
+                    <td>{{ frase.autor }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-warning btn-sm" @click="editarFrase(index)">Editar</button>
+                            <button class="btn btn-danger btn-sm" @click="confirmarEliminar(index)">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Modal -->
+        <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabel">{{ currentIndex !== null ? 'Editar Frase' : 'Agregar Nueva Frase' }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formFrase">
+                            <div class="mb-3">
+                                <label for="nuevoAutor" class="form-label">Autor</label>
+                                <input type="text" class="form-control" id="nuevoAutor" v-model="currentAutor" placeholder="Nombre del autor" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="nuevoTexto" class="form-label">Frase</label>
+                                <input type="text" class="form-control" id="nuevoTexto" v-model="currentTexto" placeholder="Escribe la frase aquí" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" @click="guardarFrase">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <!-- Vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.prod.min.js"></script>
+    <!-- Tu script JavaScript -->
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    frases: [
+                        { autor: 'Gabriel García Márquez', texto: 'El mejor defecto es no tener ninguno.' },
+                        { autor: 'Jorge Luis Borges', texto: 'Siempre imaginé que el Paraíso sería algún tipo de biblioteca.' },
+                        { autor: 'William Shakespeare', texto: 'Ser o no ser, esa es la cuestión.'}
+                    ],
+                    currentIndex: null,
+                    currentAutor: '',
+                    currentTexto: '',
+                };
+            },
+            methods: {
+                openModal() {
+                    this.currentIndex = null;
+                    this.currentAutor = '';
+                    this.currentTexto = '';
+                },
+                guardarFrase() {
+                    if (!this.currentAutor || !this.currentTexto) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Campos incompletos',
+                            text: 'Por favor, complete todos los campos antes de guardar.',
+                        });
+                        return;
+                    }
+
+                    if (this.currentIndex !== null) {
+                        // Editar frase existente
+                        this.frases[this.currentIndex] = { autor: this.currentAutor, texto: this.currentTexto };
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Frase actualizada',
+                            text: 'Frase actualizada correctamente.',
+                        });
+                    } else {
+                        // Agregar nueva frase
+                        this.frases.push({ autor: this.currentAutor, texto: this.currentTexto });
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Frase agregada',
+                            text: 'Frase agregada correctamente.',
+                        });
+                    }
+                    this.closeModal(); // Cerrar el modal después de guardar
+                },
+                editarFrase(index) {
+                    this.currentIndex = index;
+                    this.currentAutor = this.frases[index].autor;
+                    this.currentTexto = this.frases[index].texto;
+                    new bootstrap.Modal(document.getElementById('modal')).show();
+                },
+                confirmarEliminar(index) {
+                    Swal.fire({
+                        title: '¿Estás seguro?',
+                        text: "¡No podrás revertir esto!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.eliminarFrase(index);
+                            Swal.fire(
+                                'Eliminado',
+                                'Frase eliminada correctamente.',
+                                'success'
+                            );
+                        }
+                    });
+                },
+                eliminarFrase(index) {
+                    this.frases.splice(index, 1);
+                },
+                closeModal() {
+                    const modalElement = document.getElementById('modal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                    modalInstance.hide(); // Ocultar el modal después de guardar
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
+
